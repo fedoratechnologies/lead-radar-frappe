@@ -1,0 +1,128 @@
+{
+  "actions": [],
+  "allow_copy": 0,
+  "allow_import": 0,
+  "allow_rename": 0,
+  "beta": 0,
+  "creation": "2026-01-05 00:00:00.000000",
+  "custom": 0,
+  "doctype": "DocType",
+  "document_type": "Setup",
+  "editable_grid": 1,
+  "engine": "InnoDB",
+  "field_order": [
+    "publisher_section",
+    "publisher_url",
+    "scoring_section",
+    "window_days",
+    "half_life_days",
+    "min_signal_confidence",
+    "promote_threshold",
+    "last_publish_section",
+    "last_published_on",
+    "last_publish_commit_sha",
+    "last_publish_commit_url"
+  ],
+  "fields": [
+    {
+      "fieldname": "publisher_section",
+      "fieldtype": "Section Break",
+      "label": "Publisher"
+    },
+    {
+      "default": "http://lead-radar-publisher.lead-radar.svc.cluster.local:8080",
+      "fieldname": "publisher_url",
+      "fieldtype": "Data",
+      "label": "Publisher URL",
+      "reqd": 1
+    },
+    {
+      "fieldname": "scoring_section",
+      "fieldtype": "Section Break",
+      "label": "Scoring"
+    },
+    {
+      "default": "90",
+      "fieldname": "window_days",
+      "fieldtype": "Int",
+      "label": "Window Days",
+      "reqd": 1
+    },
+    {
+      "default": "14",
+      "fieldname": "half_life_days",
+      "fieldtype": "Int",
+      "label": "Half Life Days",
+      "reqd": 1
+    },
+    {
+      "default": "0.7",
+      "fieldname": "min_signal_confidence",
+      "fieldtype": "Float",
+      "label": "Min Signal Confidence",
+      "reqd": 1
+    },
+    {
+      "default": "70",
+      "fieldname": "promote_threshold",
+      "fieldtype": "Percent",
+      "label": "Promote Threshold (%)",
+      "reqd": 1
+    },
+    {
+      "fieldname": "last_publish_section",
+      "fieldtype": "Section Break",
+      "label": "Last Publish"
+    },
+    {
+      "fieldname": "last_published_on",
+      "fieldtype": "Datetime",
+      "label": "Published On",
+      "read_only": 1
+    },
+    {
+      "fieldname": "last_publish_commit_sha",
+      "fieldtype": "Data",
+      "label": "Commit SHA",
+      "read_only": 1
+    },
+    {
+      "fieldname": "last_publish_commit_url",
+      "fieldtype": "Data",
+      "label": "Commit URL",
+      "read_only": 1
+    }
+  ],
+  "has_web_view": 0,
+  "icon": "octicon octicon-git-commit",
+  "idx": 0,
+  "in_create": 0,
+  "is_submittable": 0,
+  "issingle": 1,
+  "istable": 0,
+  "max_attachments": 0,
+  "modified": "2026-01-05 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "FTG Lead Radar",
+  "name": "Lead Radar Settings",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1,
+      "delete": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "System Manager",
+      "share": 1,
+      "write": 1
+    }
+  ],
+  "read_only": 0,
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "track_changes": 1
+}
+

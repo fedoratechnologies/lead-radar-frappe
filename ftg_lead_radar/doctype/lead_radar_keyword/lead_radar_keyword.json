@@ -1,0 +1,50 @@
+{
+  "actions": [],
+  "allow_copy": 0,
+  "allow_import": 0,
+  "allow_rename": 0,
+  "beta": 0,
+  "creation": "2026-01-05 00:00:00.000000",
+  "custom": 0,
+  "doctype": "DocType",
+  "editable_grid": 1,
+  "engine": "InnoDB",
+  "field_order": [
+    "keyword",
+    "weight"
+  ],
+  "fields": [
+    {
+      "fieldname": "keyword",
+      "fieldtype": "Data",
+      "in_list_view": 1,
+      "label": "Keyword",
+      "reqd": 1
+    },
+    {
+      "default": "1",
+      "fieldname": "weight",
+      "fieldtype": "Float",
+      "in_list_view": 1,
+      "label": "Weight",
+      "reqd": 1
+    }
+  ],
+  "has_web_view": 0,
+  "idx": 0,
+  "in_create": 0,
+  "is_submittable": 0,
+  "issingle": 0,
+  "istable": 1,
+  "max_attachments": 0,
+  "modified": "2026-01-05 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "FTG Lead Radar",
+  "name": "Lead Radar Keyword",
+  "owner": "Administrator",
+  "permissions": [],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "track_changes": 1
+}
+
