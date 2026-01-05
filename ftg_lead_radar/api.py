@@ -83,6 +83,10 @@ def publish_config() -> dict[str, Any]:
 	endpoint = _publisher_endpoint(settings.publisher_url)
 
 	payload = build_config_payload()
+	if not payload["sources"]:
+		frappe.throw("Create at least one Lead Radar Source before publishing.")
+	if not payload["keyword_packs"]:
+		frappe.throw("Create at least one Lead Radar Keyword Pack before publishing.")
 	ts = datetime.now(tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 	payload["message"] = f"Lead Radar publish from ERPNext ({frappe.local.site}) {ts}"
 
@@ -90,7 +94,6 @@ def publish_config() -> dict[str, Any]:
 		resp = requests.post(endpoint, json=payload, timeout=30)
 	except Exception:
 		frappe.throw("Failed to contact publisher service.")
-		raise
 
 	if not resp.ok:
 		frappe.throw(f"Publisher failed ({resp.status_code}): {resp.text}")
@@ -99,7 +102,6 @@ def publish_config() -> dict[str, Any]:
 		data = resp.json()
 	except Exception:
 		frappe.throw(f"Publisher returned non-JSON response: {resp.text}")
-		raise
 
 	if not data.get("ok"):
 		frappe.throw(f"Publisher error: {data}")
@@ -109,4 +111,3 @@ def publish_config() -> dict[str, Any]:
 	settings.db_set("last_published_on", frappe.utils.now_datetime())
 
 	return {"commit_sha": data.get("commit_sha"), "commit_url": data.get("commit_url")}
-
