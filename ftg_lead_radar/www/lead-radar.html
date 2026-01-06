@@ -1,0 +1,136 @@
+{% extends "templates/web.html" %}
+
+{% block page_content %}
+<div class="container mt-4">
+  <div class="row align-items-center">
+    <div class="col-md-8">
+      <h1 class="mb-1">Lead Radar</h1>
+      <p class="text-muted mb-0">Manage sources + keyword packs, then publish to GitOps.</p>
+    </div>
+    <div class="col-md-4 text-md-right mt-3 mt-md-0">
+      <button id="lead-radar-publish" class="btn btn-primary">
+        Publish GitOps Config
+      </button>
+    </div>
+  </div>
+
+  <div class="row mt-4">
+    <div class="col-md-4 mb-3">
+      <div class="card">
+        <div class="card-body">
+          <div class="h6 text-muted mb-1">Sources</div>
+          <div class="h3 mb-2">{{ sources_count }}</div>
+          <a class="btn btn-outline-secondary btn-sm" href="/app/lead-radar-source">Open</a>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4 mb-3">
+      <div class="card">
+        <div class="card-body">
+          <div class="h6 text-muted mb-1">Keyword Packs</div>
+          <div class="h3 mb-2">{{ packs_count }}</div>
+          <a class="btn btn-outline-secondary btn-sm" href="/app/lead-radar-keyword-pack">Open</a>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4 mb-3">
+      <div class="card">
+        <div class="card-body">
+          <div class="h6 text-muted mb-1">Settings</div>
+          <div class="small text-muted mb-2">Publisher + thresholds</div>
+          <a class="btn btn-outline-secondary btn-sm" href="/app/lead-radar-settings">Open</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-lg-7 mb-3">
+      <div class="card">
+        <div class="card-body">
+          <div class="h5 mb-2">Last publish</div>
+          {% if last_publish_commit_url %}
+            <div class="mb-1">
+              <a href="{{ last_publish_commit_url }}" target="_blank" rel="noopener noreferrer">
+                {{ last_publish_commit_sha or "View commit" }}
+              </a>
+            </div>
+          {% else %}
+            <div class="text-muted">No publish recorded yet.</div>
+          {% endif %}
+          {% if last_published_on %}
+            <div class="text-muted small">{{ last_published_on }}</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-5 mb-3">
+      <div class="card">
+        <div class="card-body">
+          <div class="h5 mb-2">Source types</div>
+          <ul class="mb-0">
+            <li><code>rss</code> – RSS/Atom feeds</li>
+            <li><code>sitemap</code> – sitemap.xml URLs (fetches pages)</li>
+            <li><code>html_list</code> – listing page with links (fetches pages)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="lead-radar-publish-result" class="mt-3"></div>
+</div>
+
+<script>
+  (function () {
+    function setResult(html) {
+      var el = document.getElementById("lead-radar-publish-result");
+      if (!el) return;
+      el.innerHTML = html || "";
+    }
+
+    function escapeHtml(text) {
+      return (text || "").replace(/[&<>"']/g, function (c) {
+        return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[c];
+      });
+    }
+
+    frappe.ready(function () {
+      var btn = document.getElementById("lead-radar-publish");
+      if (!btn) return;
+
+      btn.addEventListener("click", function () {
+        btn.disabled = true;
+        setResult("");
+
+        frappe.call({
+          method: "ftg_lead_radar.api.publish_config",
+          callback: function (r) {
+            var msg = r && r.message ? r.message : {};
+            var url = msg.commit_url || "";
+            if (url) {
+              setResult(
+                '<div class="alert alert-success mb-0">Published: <a href="' +
+                  escapeHtml(url) +
+                  '" target="_blank" rel="noopener noreferrer">' +
+                  escapeHtml(url) +
+                  "</a></div>"
+              );
+            } else {
+              setResult('<div class="alert alert-success mb-0">Published.</div>');
+            }
+          },
+          error: function (err) {
+            var text = (err && err.message) ? err.message : "Publish failed.";
+            setResult('<div class="alert alert-danger mb-0">' + escapeHtml(text) + "</div>");
+          },
+          always: function () {
+            btn.disabled = false;
+          },
+        });
+      });
+    });
+  })();
+</script>
+{% endblock %}
+
