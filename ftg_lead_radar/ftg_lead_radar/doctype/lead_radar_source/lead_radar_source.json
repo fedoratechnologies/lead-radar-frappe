@@ -15,7 +15,11 @@
     "enabled",
     "source_type",
     "source_name",
+    "source_weight",
     "url",
+    "max_items",
+    "include_regex",
+    "exclude_regex",
     "tags"
   ],
   "fields": [
@@ -37,7 +41,7 @@
       "fieldname": "source_type",
       "fieldtype": "Select",
       "label": "Type",
-      "options": "rss",
+      "options": "rss\nsitemap\nhtml_list",
       "reqd": 1
     },
     {
@@ -47,11 +51,37 @@
       "reqd": 1
     },
     {
+      "default": "1",
+      "description": "Multiplier applied to scores from this source.",
+      "fieldname": "source_weight",
+      "fieldtype": "Float",
+      "label": "Weight"
+    },
+    {
       "fieldname": "url",
       "fieldtype": "Data",
       "label": "URL",
       "options": "URL",
       "reqd": 1
+    },
+    {
+      "default": "20",
+      "description": "Max items per run for sitemap/html_list sources.",
+      "fieldname": "max_items",
+      "fieldtype": "Int",
+      "label": "Max Items"
+    },
+    {
+      "description": "Optional regex to include URLs (case-insensitive).",
+      "fieldname": "include_regex",
+      "fieldtype": "Data",
+      "label": "Include Regex"
+    },
+    {
+      "description": "Optional regex to exclude URLs (case-insensitive).",
+      "fieldname": "exclude_regex",
+      "fieldtype": "Data",
+      "label": "Exclude Regex"
     },
     {
       "description": "Comma-separated tags (e.g. us, ethiopia, lms).",
@@ -91,4 +121,3 @@
   "sort_order": "DESC",
   "track_changes": 1
 }
-

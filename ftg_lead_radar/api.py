@@ -35,19 +35,35 @@ def build_config_payload() -> dict[str, Any]:
 	sources: list[dict[str, Any]] = []
 	for row in frappe.get_all(
 		"Lead Radar Source",
-		fields=["source_id", "enabled", "source_type", "source_name", "url", "tags"],
+		fields=[
+			"source_id",
+			"enabled",
+			"source_type",
+			"source_name",
+			"source_weight",
+			"url",
+			"max_items",
+			"include_regex",
+			"exclude_regex",
+			"tags",
+		],
 		order_by="modified desc",
 	):
-		sources.append(
-			{
-				"id": row.source_id,
-				"enabled": bool(row.enabled),
-				"type": row.source_type or "rss",
-				"name": row.source_name,
-				"url": row.url,
-				"tags": _parse_tags(row.tags),
-			}
-		)
+		src: dict[str, Any] = {
+			"id": row.source_id,
+			"enabled": bool(row.enabled),
+			"type": row.source_type or "rss",
+			"name": row.source_name,
+			"url": row.url,
+			"tags": _parse_tags(row.tags),
+			"weight": float(row.source_weight or 1.0),
+			"max_items": int(row.max_items or 20),
+		}
+		if row.include_regex:
+			src["include_regex"] = str(row.include_regex)
+		if row.exclude_regex:
+			src["exclude_regex"] = str(row.exclude_regex)
+		sources.append(src)
 
 	keyword_packs: list[dict[str, Any]] = []
 	for row in frappe.get_all(
