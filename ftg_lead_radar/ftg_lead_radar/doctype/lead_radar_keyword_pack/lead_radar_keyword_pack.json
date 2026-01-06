@@ -76,10 +76,21 @@
       "role": "System Manager",
       "share": 1,
       "write": 1
+    },
+    {
+      "create": 1,
+      "delete": 0,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "COS",
+      "share": 1,
+      "write": 1
     }
   ],
   "sort_field": "modified",
   "sort_order": "DESC",
   "track_changes": 1
 }
-

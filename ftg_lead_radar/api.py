@@ -93,7 +93,8 @@ def build_config_payload() -> dict[str, Any]:
 
 @frappe.whitelist()
 def publish_config() -> dict[str, Any]:
-	frappe.only_for("System Manager")
+	if not (frappe.has_role("COS") or frappe.has_role("System Manager")):
+		frappe.throw("Not permitted.", frappe.PermissionError)
 
 	settings = frappe.get_single("Lead Radar Settings")
 	endpoint = _publisher_endpoint(settings.publisher_url)

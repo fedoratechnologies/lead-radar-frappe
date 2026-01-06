@@ -10,7 +10,7 @@ def get_context(context: dict) -> dict:
 		frappe.local.flags.redirect_location = "/login?redirect-to=/lead-radar"
 		raise frappe.Redirect
 
-	if not frappe.has_role("System Manager"):
+	if not (frappe.has_role("COS") or frappe.has_role("System Manager")):
 		frappe.throw("Not permitted.", frappe.PermissionError)
 
 	settings = frappe.get_single("Lead Radar Settings")
@@ -22,4 +22,3 @@ def get_context(context: dict) -> dict:
 	context["last_publish_commit_sha"] = settings.last_publish_commit_sha
 	context["last_publish_commit_url"] = settings.last_publish_commit_url
 	return context
-

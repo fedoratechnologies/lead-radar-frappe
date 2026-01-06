@@ -8,7 +8,7 @@
 <div class="container mt-4">
   <div class="alert alert-info mb-0">Redirecting to login…</div>
 </div>
-{% elif not frappe.has_role("System Manager") %}
+{% elif not (frappe.has_role("COS") or frappe.has_role("System Manager")) %}
 <div class="container mt-4">
   <div class="alert alert-danger mb-0">Not permitted.</div>
 </div>
