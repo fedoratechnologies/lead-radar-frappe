@@ -1,6 +1,24 @@
 {% extends "templates/web.html" %}
 
 {% block page_content %}
+{% if frappe.session.user == "Guest" %}
+<script>
+  window.location = "/login?redirect-to=/lead-radar";
+</script>
+<div class="container mt-4">
+  <div class="alert alert-info mb-0">Redirecting to login…</div>
+</div>
+{% elif not frappe.has_role("System Manager") %}
+<div class="container mt-4">
+  <div class="alert alert-danger mb-0">Not permitted.</div>
+</div>
+{% else %}
+{% set settings = frappe.get_single("Lead Radar Settings") %}
+{% set sources_count = frappe.db.count("Lead Radar Source") %}
+{% set packs_count = frappe.db.count("Lead Radar Keyword Pack") %}
+{% set last_published_on = settings.last_published_on %}
+{% set last_publish_commit_sha = settings.last_publish_commit_sha %}
+{% set last_publish_commit_url = settings.last_publish_commit_url %}
 <div class="container mt-4">
   <div class="row align-items-center">
     <div class="col-md-8">
@@ -132,5 +150,5 @@
     });
   })();
 </script>
+{% endif %}
 {% endblock %}
-
