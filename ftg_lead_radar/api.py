@@ -1,10 +1,16 @@
 from __future__ import annotations
 
+import html
+import ipaddress
+import re
+import socket
 from datetime import datetime, timezone
 from typing import Any
+from urllib.parse import urlparse
 
 import frappe
 import requests
+from bs4 import BeautifulSoup
 
 
 def _parse_tags(raw: str | None) -> list[str]:
@@ -91,10 +97,133 @@ def build_config_payload() -> dict[str, Any]:
 	return {"scoring": scoring, "sources": sources, "keyword_packs": keyword_packs}
 
 
-@frappe.whitelist()
-def publish_config() -> dict[str, Any]:
+def _require_internal_permission() -> None:
 	if not (frappe.has_role("COS") or frappe.has_role("System Manager")):
 		frappe.throw("Not permitted.", frappe.PermissionError)
+
+
+def _validate_public_http_url(raw_url: str) -> str:
+	raw_url = (raw_url or "").strip()
+	if not raw_url:
+		raise ValueError("URL is required")
+
+	parsed = urlparse(raw_url)
+	if parsed.scheme not in {"http", "https"}:
+		raise ValueError("Only http/https URLs are allowed")
+	if not parsed.netloc:
+		raise ValueError("Invalid URL")
+	if parsed.username or parsed.password:
+		raise ValueError("URLs with embedded credentials are not allowed")
+
+	host = (parsed.hostname or "").strip().lower()
+	if not host:
+		raise ValueError("Invalid host")
+	if host in {"localhost"}:
+		raise ValueError("Host not allowed")
+	if host.endswith((".local", ".internal", ".cluster.local", ".svc")):
+		raise ValueError("Host not allowed")
+
+	if parsed.port and parsed.port not in {80, 443}:
+		raise ValueError("Only ports 80 and 443 are allowed")
+
+	port = parsed.port or (443 if parsed.scheme == "https" else 80)
+	try:
+		resolved = socket.getaddrinfo(host, port, type=socket.SOCK_STREAM)
+	except socket.gaierror as exc:
+		raise ValueError(f"Failed to resolve host: {host}") from exc
+
+	for _family, _socktype, _proto, _canonname, sockaddr in resolved:
+		ip = sockaddr[0]
+		ip_obj = ipaddress.ip_address(ip)
+		if (
+			ip_obj.is_private
+			or ip_obj.is_loopback
+			or ip_obj.is_link_local
+			or ip_obj.is_reserved
+			or ip_obj.is_multicast
+		):
+			raise ValueError("Host resolves to a non-public IP address")
+
+	return raw_url
+
+
+def _scrape_staff_cards_avada(html_text: str, source_url: str) -> list[dict[str, str]]:
+	soup = BeautifulSoup(html_text, "html.parser")
+
+	out: list[dict[str, str]] = []
+	seen: set[str] = set()
+	for card in soup.select("li.fusion-post-cards-grid-column"):
+		name_el = card.find("h3")
+		if not name_el:
+			continue
+		full_name = re.sub(r"\s+", " ", name_el.get_text(" ", strip=True)).strip()
+		if not full_name:
+			continue
+
+		title_el = card.find("p")
+		title = re.sub(r"\s+", " ", title_el.get_text(" ", strip=True)).strip() if title_el else ""
+
+		email = ""
+		mail_el = card.find("a", href=True)
+		if mail_el:
+			href = html.unescape(str(mail_el.get("href") or "")).strip()
+			if href.lower().startswith("mailto:"):
+				email = href.split(":", 1)[1].split("?", 1)[0].strip()
+
+		key = (email.lower() if email else f"{full_name}|{title}".lower()).strip()
+		if not key or key in seen:
+			continue
+		seen.add(key)
+
+		out.append(
+			{
+				"full_name": full_name,
+				"title": title,
+				"email": email,
+				"source_url": source_url,
+			}
+		)
+
+	out.sort(key=lambda r: (r["title"].lower(), r["full_name"].lower()))
+	return out
+
+
+@frappe.whitelist()
+def scrape_staff_directory(url: str) -> dict[str, Any]:
+	_require_internal_permission()
+
+	source_url = _validate_public_http_url(url)
+
+	try:
+		resp = requests.get(
+			source_url,
+			headers={
+				"User-Agent": "FTG Lead Radar (due diligence)",
+				"Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+			},
+			timeout=30,
+		)
+	except Exception:
+		frappe.throw("Failed to fetch staff page.")
+
+	if resp.status_code != 200:
+		frappe.throw(f"Staff page returned {resp.status_code}")
+
+	content_type = (resp.headers.get("Content-Type") or "").lower()
+	if "html" not in content_type and "xml" not in content_type:
+		frappe.throw("Staff page is not HTML.")
+
+	html_text = resp.text or ""
+	if len(html_text) > 1_000_000:
+		html_text = html_text[:1_000_000]
+
+	staff = _scrape_staff_cards_avada(html_text, source_url=resp.url or source_url)
+	return {"ok": True, "source_url": resp.url or source_url, "count": len(staff), "staff": staff}
+
+
+@frappe.whitelist()
+def publish_config() -> dict[str, Any]:
+	_require_internal_permission()
 
 	settings = frappe.get_single("Lead Radar Settings")
 	endpoint = _publisher_endpoint(settings.publisher_url)
